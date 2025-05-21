@@ -4,3 +4,4 @@ export * from './food';
 export * from './feedback';
 export * from './DateRangePicker';
 export * from './charts';
+export * from './meal';

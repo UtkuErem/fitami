@@ -148,19 +148,14 @@ const Workouts: React.FC = () => {
       </View>
 
       {workouts.length > 0 ? (
-        <>
-          <FlatList
-            data={workouts}
-            renderItem={renderWorkoutItem}
-            keyExtractor={item => item._id.toString()}
-            contentContainerStyle={styles.workoutsList}
-          />
+        <ScrollView contentContainerStyle={styles.scrollContent}>
+          {workouts.map(item => renderWorkoutItem({ item }))}
 
           {/* Workout Statistics */}
           <View style={styles.chartContainer}>
             <WorkoutChart data={workouts} />
           </View>
-        </>
+        </ScrollView>
       ) : (
         <View style={styles.emptyState}>
           <Icon name="fitness-center" size={48} color={colors.text.hint} />
@@ -292,6 +287,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   workoutsList: {
+    padding: 16,
+  },
+  scrollContent: {
     padding: 16,
   },
   workoutCard: {

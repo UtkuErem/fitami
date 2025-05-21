@@ -17,12 +17,11 @@ import { getTranslatedFoodItems } from '../../../constants/foodData';
 import { atoms } from '../../../theme';
 import { MealType } from '../../../constants/mealTypes';
 import { Modal } from '../../organisms';
+import { MealDetailsModal, EditMealModal, AddMealModal } from '../../molecules/meal';
 import {
   CalorieCard,
   QuickEntrySection,
-  MealsList,
-  AddMealForm,
-  MealDetails
+  MealsList
 } from '../../organisms/dashboard';
 import { calculateCalories } from '../../../utils';
 
@@ -40,8 +39,6 @@ const UserDashboard: React.FC = () => {
   const [showEditMealModal, setShowEditMealModal] = useState(false);
   const [selectedMeal, setSelectedMeal] = useState<any>(null);
   const [fadeAnim] = useState(new Animated.Value(0));
-  const addMealFormSubmitRef = useRef<(() => void) | null>(null);
-  const editMealFormSubmitRef = useRef<(() => void) | null>(null);
 
   // Determine if we're on a small screen
   const isSmallScreen = width < 375;
@@ -65,7 +62,7 @@ const UserDashboard: React.FC = () => {
       const totalCalories = mealsArray.reduce((total, meal) => total + meal.calories, 0);
       setConsumedCalories(totalCalories);
     }
-  }, [databaseService]);
+  }, [databaseService, isLoading]);
 
   // Animation effect when component mounts
   useEffect(() => {
@@ -81,7 +78,7 @@ const UserDashboard: React.FC = () => {
     if (!databaseService) return;
 
     // Calculate calories from macronutrients if not provided
-    const calories = food.calories || calculateCalories(food.protein, food.carbohydrate, food.fat);
+    const calories = food.calories || calculateCalories(food.protein, food.carbs, food.fat);
 
     const mealData: MealInput = {
       key: food.key,
@@ -95,8 +92,8 @@ const UserDashboard: React.FC = () => {
       mealData.protein = food.protein;
     }
 
-    if (food.carbohydrate) {
-      mealData.carbs = food.carbohydrate;
+    if (food.carbs) {
+      mealData.carbs = food.carbs;
     }
 
     if (food.fat) {
@@ -177,7 +174,7 @@ const UserDashboard: React.FC = () => {
     if (updatedMeal) {
       // Update the meals array with the updated meal
       const updatedMeals = meals.map(meal =>
-        meal._id.equals(selectedMeal._id) ? updatedMeal : meal
+        meal._id && meal._id.equals(selectedMeal._id) ? updatedMeal : meal
       );
       setMeals(updatedMeals);
 
@@ -194,9 +191,12 @@ const UserDashboard: React.FC = () => {
     if (!databaseService) return;
 
     // Find the meal to get its calories
-    const mealToDelete = meals.find(meal => meal._id.equals(mealId));
+    const mealToDelete = meals.find(meal => meal._id && meal._id.equals(mealId));
 
     if (!mealToDelete) return;
+
+    // Store the calories value before deleting the meal
+    const caloriesValue = mealToDelete.calories;
 
     // Confirm deletion
     Alert.alert(
@@ -211,17 +211,15 @@ const UserDashboard: React.FC = () => {
           text: t('delete'),
           style: 'destructive',
           onPress: () => {
-            // Delete the meal from the database
-            const success = databaseService.deleteMeal(mealId);
+            // Update the meals array first to avoid referencing deleted objects
+            const updatedMeals = meals.filter(meal => meal._id && !meal._id.equals(mealId));
+            setMeals(updatedMeals);
 
-            if (success) {
-              // Update the meals array
-              const updatedMeals = meals.filter(meal => !meal._id.equals(mealId));
-              setMeals(updatedMeals);
+            // Update consumed calories
+            setConsumedCalories(consumedCalories - caloriesValue);
 
-              // Update consumed calories
-              setConsumedCalories(consumedCalories - mealToDelete.calories);
-            }
+            // Delete the meal from the database after updating the state
+            databaseService.deleteMeal(mealId);
           }
         }
       ]
@@ -293,59 +291,28 @@ const UserDashboard: React.FC = () => {
         </Animated.View>
 
         {/* Add Meal Modal */}
-        <Modal
+        <AddMealModal
           visible={showAddMealModal}
           onClose={() => setShowAddMealModal(false)}
-          title={`${t('addMeal')} 🍲`}
-          variant="form"
-          primaryButtonText={t('add')}
-          primaryButtonAction={() => {
-            if (addMealFormSubmitRef.current) addMealFormSubmitRef.current();
-          }}
-          secondaryButtonText={t('cancel')}
-          secondaryButtonAction={() => setShowAddMealModal(false)}
-        >
-          <AddMealForm
-            onAddMeal={addCustomMeal}
-            isSmallScreen={isSmallScreen}
-            onSubmitRef={addMealFormSubmitRef}
-          />
-        </Modal>
+          onAddMeal={addCustomMeal}
+          isSmallScreen={isSmallScreen}
+        />
 
         {/* Meal Details Modal */}
-        <Modal
+        <MealDetailsModal
           visible={showMealDetailsModal}
           onClose={() => setShowMealDetailsModal(false)}
-          title={`${t('mealDetails')} 🍽️`}
-          variant="form"
-          primaryButtonText={t('close')}
-          primaryButtonAction={() => setShowMealDetailsModal(false)}
-        >
-          {selectedMeal && <MealDetails meal={selectedMeal} />}
-        </Modal>
+          meal={selectedMeal}
+        />
 
         {/* Edit Meal Modal */}
-        <Modal
+        <EditMealModal
           visible={showEditMealModal}
           onClose={() => setShowEditMealModal(false)}
-          title={`${t('editMeal')} ✏️`}
-          variant="form"
-          primaryButtonText={t('save')}
-          primaryButtonAction={() => {
-            if (editMealFormSubmitRef.current) editMealFormSubmitRef.current();
-          }}
-          secondaryButtonText={t('cancel')}
-          secondaryButtonAction={() => setShowEditMealModal(false)}
-        >
-          {selectedMeal && (
-            <AddMealForm
-              onAddMeal={updateMeal}
-              isSmallScreen={isSmallScreen}
-              onSubmitRef={editMealFormSubmitRef}
-              initialValues={selectedMeal}
-            />
-          )}
-        </Modal>
+          onUpdateMeal={updateMeal}
+          isSmallScreen={isSmallScreen}
+          meal={selectedMeal}
+        />
       </ScrollView>
     </SafeAreaView>
   );

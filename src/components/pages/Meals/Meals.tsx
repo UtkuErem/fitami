@@ -16,6 +16,8 @@ import { MealsList } from '../../organisms/dashboard';
 import { Modal } from '../../organisms';
 import { DateRangePicker } from '../../molecules/DateRangePicker';
 import { NutritionChart } from '../../molecules/charts';
+import { MealModal } from '../../molecules/meal';
+import { MealType } from '../../../constants/mealTypes';
 
 const { colors } = atoms;
 
@@ -25,6 +27,7 @@ const Meals: React.FC = () => {
   const { calorieGoal } = useUser();
   const [meals, setMeals] = useState<any[]>([]);
   const [showDatePickerModal, setShowDatePickerModal] = useState(false);
+  const [showAddMealModal, setShowAddMealModal] = useState(false);
   const [startDate, setStartDate] = useState<Date>(new Date());
   const [endDate, setEndDate] = useState<Date>(new Date());
   const [isDateRangeActive, setIsDateRangeActive] = useState(false);
@@ -58,6 +61,38 @@ const Meals: React.FC = () => {
   // Reset to today's meals
   const resetToToday = () => {
     setIsDateRangeActive(false);
+  };
+
+  // Add a custom meal
+  const addCustomMeal = (mealData: {
+    key: string;
+    calories: number;
+    mealType: MealType;
+    protein?: number;
+    carbs?: number;
+    fat?: number;
+  }) => {
+    if (!databaseService) return;
+
+    const dbMealData = {
+      _id: new Realm.BSON.ObjectId(),
+      key: mealData.key,
+      calories: mealData.calories,
+      date: new Date(),
+      mealType: mealData.mealType,
+      protein: mealData.protein || 0,
+      carbs: mealData.carbs || 0,
+      fat: mealData.fat || 0,
+    };
+
+    // Add optional nutritional info if provided
+    if (mealData.protein) {dbMealData.protein = mealData.protein;}
+    if (mealData.carbs) {dbMealData.carbs = mealData.carbs;}
+    if (mealData.fat) {dbMealData.fat = mealData.fat;}
+
+    const newMeal = databaseService.createMeal(dbMealData);
+    setMeals([...meals, newMeal]);
+    setShowAddMealModal(false);
   };
 
   return (
@@ -94,7 +129,7 @@ const Meals: React.FC = () => {
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <MealsList
           meals={meals}
-          onAddMeal={() => {}}
+          onAddMeal={() => setShowAddMealModal(true)}
           isSmallScreen={false}
         />
 
@@ -130,6 +165,14 @@ const Meals: React.FC = () => {
           initialEndDate={endDate}
         />
       </Modal>
+
+      {/* Add Meal Modal */}
+      <MealModal
+        visible={showAddMealModal}
+        onClose={() => setShowAddMealModal(false)}
+        onAddMeal={addCustomMeal}
+        isSmallScreen={false}
+      />
     </SafeAreaView>
   );
 };

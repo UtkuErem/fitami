@@ -34,6 +34,7 @@ const NutritionChart: React.FC<NutritionChartProps> = ({ data, calorieGoal }) =>
     }
     acc[dateStr].calories += item.calories;
     acc[dateStr].protein += item.protein || 0;
+    // Add carbs value if available
     acc[dateStr].carbs += item.carbs || 0;
     acc[dateStr].fat += item.fat || 0;
     return acc;

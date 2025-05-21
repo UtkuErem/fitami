@@ -1,9 +1,9 @@
 import React from 'react';
 import { View, Text, StyleSheet, Dimensions } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { atoms } from '../../../../theme';
+import { MarqueeText } from '../../../../components/atoms';
 
-const { colors } = atoms;
+import {colors} from '../../../../theme/atoms';
 const { width } = Dimensions.get('window');
 
 interface WorkoutChartProps {
@@ -112,7 +112,7 @@ const WorkoutChart: React.FC<WorkoutChartProps> = ({ data }) => {
                     ]}
                   />
                 </View>
-                <Text style={styles.barLabel}>{formatDate(day.date)}</Text>
+                <MarqueeText style={styles.barLabel}>{formatDate(day.date)}</MarqueeText>
               </View>
             ))}
           </View>
@@ -122,17 +122,17 @@ const WorkoutChart: React.FC<WorkoutChartProps> = ({ data }) => {
       {/* Workout Stats */}
       <View style={styles.statsContainer}>
         <View style={styles.statCard}>
-          <Text style={styles.statValue}>{totalWorkouts}</Text>
+          <MarqueeText style={styles.statValue}>{totalWorkouts.toString()}</MarqueeText>
           <Text style={styles.statLabel}>{t('totalWorkouts')}</Text>
         </View>
 
         <View style={styles.statCard}>
-          <Text style={styles.statValue}>{totalDuration} {t('min')}</Text>
+          <MarqueeText style={styles.statValue}>{`${totalDuration} ${t('min')}`}</MarqueeText>
           <Text style={styles.statLabel}>{t('totalDuration')}</Text>
         </View>
 
         <View style={styles.statCard}>
-          <Text style={styles.statValue}>{totalCaloriesBurned}</Text>
+          <MarqueeText style={styles.statValue}>{totalCaloriesBurned.toString()}</MarqueeText>
           <Text style={styles.statLabel}>{t('totalCalories')}</Text>
         </View>
       </View>
@@ -142,11 +142,11 @@ const WorkoutChart: React.FC<WorkoutChartProps> = ({ data }) => {
         <Text style={styles.sectionSubtitle}>{t('averages')}</Text>
         <View style={styles.averageRow}>
           <Text style={styles.averageLabel}>{t('avgCaloriesBurned')}:</Text>
-          <Text style={styles.averageValue}>{avgCaloriesBurned} {t('kcal')}</Text>
+          <MarqueeText style={styles.averageValue}>{`${avgCaloriesBurned} ${t('kcal')}`}</MarqueeText>
         </View>
         <View style={styles.averageRow}>
           <Text style={styles.averageLabel}>{t('avgDuration')}:</Text>
-          <Text style={styles.averageValue}>{avgDuration} {t('min')}</Text>
+          <MarqueeText style={styles.averageValue}>{`${avgDuration} ${t('min')}`}</MarqueeText>
         </View>
       </View>
 
@@ -164,9 +164,9 @@ const WorkoutChart: React.FC<WorkoutChartProps> = ({ data }) => {
                     { backgroundColor: getWorkoutTypeColor(type) }
                   ]}
                 />
-                <Text style={styles.workoutTypeName}>{t(type)}</Text>
+                <MarqueeText style={styles.workoutTypeName}>{t(type)}</MarqueeText>
               </View>
-              <Text style={styles.workoutTypeCount}>{count} {count === 1 ? t('session') : t('sessions')}</Text>
+              <MarqueeText style={styles.workoutTypeCount}>{`${count} ${count === 1 ? t('session') : t('sessions')}`}</MarqueeText>
             </View>
           ))}
         </View>
@@ -241,6 +241,8 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: colors.text.secondary,
     marginTop: 4,
+    width: '100%',
+    textAlign: 'center',
   },
   statsContainer: {
     flexDirection: 'row',
